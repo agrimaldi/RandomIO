@@ -64,7 +64,7 @@ class RandomIO(object):
 
     def _fill_buffer(self):
         # refill the buffer
-        self.buffer = self._read_raw(self.ctrblocksize)
+        self.buffer = self._read_raw(self.blocksize)
         self.bufpos = 0
 
     def _seek_buffer(self, offset):
@@ -105,13 +105,13 @@ class RandomIO(object):
         # calculate which block we are on
         self._clear_buffer()
 
-        counts = offset // self.ctrblocksize
+        counts = offset // self.blocksize
         # set the counter
         self.ctr = Counter.new(self.blocksize * 8,
                                initial_value=counts + 1)
         self.aes = AES.new(self.key, AES.MODE_CTR, counter=self.ctr)
 
-        rem = offset % self.ctrblocksize
+        rem = offset % self.blocksize
         if (rem > 0):
             self._fill_buffer()
             self._seek_buffer(rem)
@@ -144,7 +144,7 @@ class RandomIO(object):
         size = self._interpret_size(size)
 
         if (size < 1):
-            return bytes()
+            return b''
 
         # if we are reading less than 8 bytes, this function will buffer so
         # that we are always reading from the block cipher in 8 byte increments
@@ -160,7 +160,7 @@ class RandomIO(object):
         # buffer should now be empty
 
         # read some raw bytes
-        rem = size % self.ctrblocksize
+        rem = size % self.blocksize
         raw_size = size - rem
         if (raw_size > 0):
             ret += self._read_raw(raw_size)

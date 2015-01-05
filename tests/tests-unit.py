@@ -191,6 +191,19 @@ class TestRandomIO(unittest.TestCase):
         
         self.assertEqual(buf1, buf2)
     
+    def test_seek_end_consistency(self):
+        s1 = RandomIO.RandomIO('seed string', 100)
+        
+        s1.seek(98)
+        
+        buf1 = s1.read(10)
+        
+        s1.seek(90)
+
+        buf2 = s1.read(10)
+        
+        self.assertEqual(buf1, buf2[-2:])
+    
     def test_seek_end(self):
         s1 = RandomIO.RandomIO('seed string', 1000)
         
