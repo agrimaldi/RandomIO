@@ -41,7 +41,7 @@ class RandomIO(object):
         self.blocksize = 16
         self.ctrblocksize = self.blocksize // 2
         self.ctr = Counter.new(self.blocksize * 8)
-        if (seed is None):
+        if seed is None:
             seed = os.urandom(32)
         try:
             self.key = SHA256.new(seed).digest()
@@ -76,7 +76,7 @@ class RandomIO(object):
         so may return less than size bytes
         """
         remaining = len(self.buffer) - self.bufpos
-        if (size < remaining):
+        if size < remaining:
             # we can read directly from the buffer
             ret = self.buffer[self.bufpos:self.bufpos + size]
             self.bufpos += len(ret)
@@ -92,10 +92,10 @@ class RandomIO(object):
         """Seeks to the offset specified.  Offsets must be specified absolutely
         from the beginning of the stream
         """
-        if (whence == os.SEEK_CUR):
+        if whence == os.SEEK_CUR:
             offset += self.offset
-        elif (whence == os.SEEK_END):
-            if (self.size is None):
+        elif whence == os.SEEK_END:
+            if self.size is None:
                 raise RuntimeError('Cannot seek from end of stream if size'
                                    ' is unknown.')
             offset = self.size - offset
@@ -112,7 +112,7 @@ class RandomIO(object):
         self.aes = AES.new(self.key, AES.MODE_CTR, counter=self.ctr)
 
         rem = offset % self.blocksize
-        if (rem > 0):
+        if rem > 0:
             self._fill_buffer()
             self._seek_buffer(rem)
 
@@ -124,11 +124,11 @@ class RandomIO(object):
         return self.offset
 
     def _interpret_size(self, size):
-        if (self.size is not None):
-            if (size is None or self.offset + size > self.size):
+        if self.size is not None:
+            if size is None or self.offset + size > self.size:
                 size = self.size - self.offset
         else:
-            if (size is None):
+            if size is None:
                 # we don't know how much to return
                 raise RuntimeError('Stream size must be specified if bytes'
                                    ' to read is not.')
@@ -143,7 +143,7 @@ class RandomIO(object):
         """
         size = self._interpret_size(size)
 
-        if (size < 1):
+        if size < 1:
             return b''
 
         # if we are reading less than 8 bytes, this function will buffer so
@@ -162,10 +162,10 @@ class RandomIO(object):
         # read some raw bytes
         rem = size % self.blocksize
         raw_size = size - rem
-        if (raw_size > 0):
+        if raw_size > 0:
             ret += self._read_raw(raw_size)
 
-        if (rem > 0):
+        if rem > 0:
             self._fill_buffer()
             ret += self._read_buffer(rem)
 
@@ -181,8 +181,8 @@ class RandomIO(object):
         size = self._interpret_size(size)
 
         bufsz = self.bufsz
-        while (size > 0):
-            if (size < bufsz):
+        while size > 0:
+            if size < bufsz:
                 bufsz = size
             fp.write(self.read(bufsz))
             size -= bufsz
@@ -204,7 +204,7 @@ class RandomIO(object):
         :param path: the file path, or directory
         :returns: the file path
         """
-        if (os.path.isdir(path) or len(path) == 0):
+        if os.path.isdir(path) or len(path) == 0:
             path = os.path.join(path, hexlify(os.urandom(16)).decode('utf-8'))
 
         with open(path, 'wb') as f:

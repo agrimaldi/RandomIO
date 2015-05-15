@@ -30,6 +30,7 @@ import hashlib
 import RandomIO
 import binascii
 
+
 class IOTools(object):
 
     def __init__(self):
@@ -88,17 +89,17 @@ Currently available commands include:
             for i in range(args.pairs or 1):
                 seed = os.urandom(args.length or 12)
                 hexseed = binascii.hexlify(seed).decode('ascii')
-                if (args.verbose):
+                if args.verbose:
                     filesize = self._sizeformat(args.size)
                     print('Pair {0}: Generating hash for {1} file with seed {2}...'.format(
                         i, filesize, hexseed))
                 hash = hashlib.sha256(
                     RandomIO.RandomIO(seed).read(args.size)).hexdigest()
-                if (args.redis):
+                if args.redis:
                     f.write(self._genredis(hexseed, hash))
                 else:
                     f.write('{0} {1}\n'.format(hexseed, hash))
-                if (args.verbose):
+                if args.verbose:
                     print('done!')
 
 if __name__ == '__main__':
