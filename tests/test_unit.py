@@ -38,7 +38,7 @@ if _platform.startswith('linux') or _platform == 'darwin':
     iotools_call = ['IOTools.py']
 elif _platform == 'win32':
     cat_cmd = 'type'
-    iotools_call = ['python', os.path.join('bin', 'IOTools.py')]
+    iotools_call = ['python', os.path.join('../bin', 'IOTools.py')]
 
 
 class TestRandomIO(unittest.TestCase):
@@ -261,7 +261,7 @@ class TestRandomIO(unittest.TestCase):
     def test_iotools_txt(self):
         output = 'txt_test.out'
         size = 10485760
-        subprocess.call(
+        test = subprocess.call(
             iotools_call + ['pairgen', str(size),
                             '-p', '10', '-o', output])
 
@@ -285,7 +285,8 @@ class TestRandomIO(unittest.TestCase):
                 iotools_call + ['pairgen', str(size), '-p', '10', '-o', output,
                                 '--redis'])
             subprocess.call(
-                '{0} {1} | redis-cli --pipe'.format(cat_cmd, output), shell=True)
+                '{0} {1} | redis-cli --pipe'.format(cat_cmd, output),
+                    shell=True)
 
             for hexseed in r.scan_iter():
                 seed = binascii.unhexlify(hexseed)
