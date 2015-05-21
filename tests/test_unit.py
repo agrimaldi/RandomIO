@@ -286,7 +286,7 @@ class TestRandomIO(unittest.TestCase):
                                 '--redis'])
             subprocess.call(
                 '{0} {1} | redis-cli --pipe'.format(cat_cmd, output),
-                    shell=True)
+                shell=True)
 
             for hexseed in r.scan_iter():
                 seed = binascii.unhexlify(hexseed)
