@@ -84,7 +84,8 @@ $python IOTools.py --help
 usage: IOTools.py <command> [<args>]
 
 Currently available commands include:
-   pairgen       Outputs a series of seed-hash pairs for files generated using the RandomIO library.
+   pairgen       Outputs a series of seed-hash pairs for files generated using the
+                 RandomIO library.
 
 A series of command-line tools that make use of the RandomIO library.
 
