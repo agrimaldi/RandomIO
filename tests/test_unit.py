@@ -261,7 +261,7 @@ class TestRandomIO(unittest.TestCase):
     def test_iotools_txt(self):
         output = 'txt_test.out'
         size = 10485760
-        test = subprocess.call(
+        subprocess.call(
             iotools_call + ['pairgen', str(size),
                             '-p', '10', '-o', output])
 
