@@ -275,23 +275,25 @@ class TestRandomIO(unittest.TestCase):
         os.remove(output)
 
     def test_iotools_redis(self):
-        r = redis.StrictRedis(host='localhost', port=6379, db=0)
-        output = 'redis_test.out'
-        size = 10485760
+        # no redis support for windows, so just pass the test
+        if not _platform == 'win32':
+            r = redis.StrictRedis(host='localhost', port=6379, db=0)
+            output = 'redis_test.out'
+            size = 10485760
 
-        subprocess.call(
-            iotools_call + ['pairgen', str(size), '-p', '10', '-o', output,
-                            '--redis'])
-        subprocess.call(
-            '{0} {1} | redis-cli --pipe'.format(cat_cmd, output), shell=True)
+            subprocess.call(
+                iotools_call + ['pairgen', str(size), '-p', '10', '-o', output,
+                                '--redis'])
+            subprocess.call(
+                '{0} {1} | redis-cli --pipe'.format(cat_cmd, output), shell=True)
 
-        for hexseed in r.scan_iter():
-            seed = binascii.unhexlify(hexseed)
-            testhash = hashlib.sha256(
-                RandomIO.RandomIO(seed).read(size)).hexdigest()
-            self.assertEqual(r.get(hexseed).decode('ascii'), testhash)
-        os.remove(output)
-        r.flushall()
+            for hexseed in r.scan_iter():
+                seed = binascii.unhexlify(hexseed)
+                testhash = hashlib.sha256(
+                    RandomIO.RandomIO(seed).read(size)).hexdigest()
+                self.assertEqual(r.get(hexseed).decode('ascii'), testhash)
+            os.remove(output)
+            r.flushall()
 
 if __name__ == '__main__':
     unittest.main()
