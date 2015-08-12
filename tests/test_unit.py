@@ -23,31 +23,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import unittest
+import io
 import os
-import redis
-import hashlib
-import subprocess
-import binascii
+import unittest
 
 import RandomIO
-from sys import platform as _platform
-
-if _platform.startswith('linux') or _platform == 'darwin':
-    cat_cmd = 'cat'
-    iotools_call = ['IOTools.py']
-elif _platform == 'win32':
-    cat_cmd = 'type'
-    iotools_call = ['python', os.path.join('../bin', 'IOTools.py')]
 
 
 class TestRandomIO(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
 
     def test_gen(self):
         s = RandomIO.RandomIO()
@@ -103,26 +86,17 @@ class TestRandomIO(unittest.TestCase):
         s1 = RandomIO.RandomIO('seed string')
         s2 = RandomIO.RandomIO('seed string')
 
-        file1 = 'file1'
-        file2 = 'file2'
+        DUMP_LENGTH = 100
 
-        with open(file1, 'wb') as f:
-            s1.dump(f, 100)
+        file1 = io.BytesIO()
+        file2 = io.BytesIO()
 
-        with open(file2, 'wb') as f:
-            s2.dump(f, 100)
+        s1.dump(file1, DUMP_LENGTH)
+        s2.dump(file2, DUMP_LENGTH)
 
-        with open(file1, 'rb') as f:
-            contents1 = f.read()
-
-        with open(file2, 'rb') as f:
-            contents2 = f.read()
-
-        self.assertEqual(len(contents1), 100)
-        self.assertEqual(contents1, contents2)
-
-        os.remove(file1)
-        os.remove(file2)
+        self.assertEqual(file1.tell(), DUMP_LENGTH)
+        self.assertEqual(file2.tell(), DUMP_LENGTH)
+        self.assertEqual(file1.getvalue(), file2.getvalue())
 
     def test_genfile(self):
         path = RandomIO.RandomIO('seed string').genfile(100)
@@ -258,43 +232,6 @@ class TestRandomIO(unittest.TestCase):
             str(ex.exception),
             'Cannot seek from end of stream if size is unknown.')
 
-    def test_iotools_txt(self):
-        output = 'txt_test.out'
-        size = 10485760
-        subprocess.call(
-            iotools_call + ['pairgen', str(size),
-                            '-p', '10', '-o', output])
-
-        with open(output, 'r') as pairsfile:
-            for line in pairsfile:
-                (hexseed, hash) = line.rstrip().split(' ')
-                seed = binascii.unhexlify(hexseed)
-                testhash = hashlib.sha256(
-                    RandomIO.RandomIO(seed).read(size)).hexdigest()
-                self.assertEqual(hash, testhash)
-        os.remove(output)
-
-    def test_iotools_redis(self):
-        # no redis support for windows, so just pass the test
-        if not _platform == 'win32':
-            r = redis.StrictRedis(host='localhost', port=6379, db=0)
-            output = 'redis_test.out'
-            size = 10485760
-
-            subprocess.call(
-                iotools_call + ['pairgen', str(size), '-p', '10', '-o', output,
-                                '--redis'])
-            subprocess.call(
-                '{0} {1} | redis-cli --pipe'.format(cat_cmd, output),
-                shell=True)
-
-            for hexseed in r.scan_iter():
-                seed = binascii.unhexlify(hexseed)
-                testhash = hashlib.sha256(
-                    RandomIO.RandomIO(seed).read(size)).hexdigest()
-                self.assertEqual(r.get(hexseed).decode('ascii'), testhash)
-            os.remove(output)
-            r.flushall()
 
 if __name__ == '__main__':
     unittest.main()
