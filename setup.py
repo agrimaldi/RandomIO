@@ -33,11 +33,9 @@ LONG_DESCRIPTION = open('README.md').read()
 
 install_requirements = [
     'pycrypto >= 2.6.1',
-    'redis >= 2.10.3'
 ]
 
 test_requirements = [
-    'redis>=2.10.3',
     'pytest>=2.6.4',
     'pytest-pep8',
     'pytest-cache',
@@ -80,5 +78,4 @@ setup(
     install_requires=install_requirements,
     tests_require=test_requirements,
     keywords=['storj', 'randomIO', 'random generator'],
-    scripts=['bin/IOTools.py'],
 )
