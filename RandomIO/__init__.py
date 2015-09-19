@@ -23,3 +23,4 @@
 
 from .version import __version__  # NOQA
 from .RandomIO import RandomIO    # NOQA
+from .RandomIO import BatchRandomIO    # NOQA

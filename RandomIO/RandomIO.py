@@ -28,6 +28,46 @@ from Crypto.Hash import SHA256
 from Crypto.Util import Counter
 from binascii import hexlify
 
+from functools import partial
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+
+
+
+class BatchRandomIO(object):
+
+    def __init__(self, seeds=[], paths=None, size=None, ncores=1):
+        # with ProcessPoolExecutor(max_workers=ncores) as executor:
+        with ThreadPoolExecutor(max_workers=ncores) as executor:
+            g = executor.map(
+                partial(RandomIO, size=size),
+                seeds
+            )
+        self.randio_objs = list(g)
+        self.seeds = seeds
+        self.paths = paths
+        self.size = size
+        self.ncores = ncores
+
+    def genfiles(self, size=None, paths=None):
+        self.size = size if size else self.size
+        self.paths = paths if paths else self.paths
+
+        def _genfile(obj_and_path=None, size=None):
+            o, path = obj_and_path
+            o.genfile(size, path)
+            return path
+            # hash_file = o.check_file()
+            # return hash_file
+
+        # with ProcessPoolExecutor(max_workers=self.ncores) as executor:
+        with ThreadPoolExecutor(max_workers=self.ncores) as executor:
+            hashes = executor.map(
+                partial(_genfile, size=size),
+                zip(self.randio_objs, self.paths)
+            )
+        return list(hashes)
+
+
 
 class RandomIO(object):
 
