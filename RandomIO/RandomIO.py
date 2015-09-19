@@ -62,10 +62,17 @@ class BatchRandomIO(object):
                 file_hash = hashlib.sha256(f.read()).hexdigest()
             return file_hash
 
-        # with ProcessPoolExecutor(max_workers=self.ncores) as executor:
-        with ThreadPoolExecutor(max_workers=self.ncores) as executor:
-            _future_hashes = [executor.submit(_genfile, o=o, path=path, size=size)
-                              for o, path in zip(self.randio_objs, self.paths)]
+        _future_hashes = []
+        executor = ThreadPoolExecutor(max_workers=self.ncores)
+        try:
+            _future_hashes = [
+                executor.submit(_genfile, seed=seed, path=path, size=self.size)
+                for seed, path in zip(self.seeds, self.paths)
+            ]
+        except Exception as e:
+            raise e
+        finally:
+            executor.shutdown(wait=False)
         hashes = (f.result() for f in as_completed(_future_hashes))
         return hashes
 
