@@ -22,6 +22,7 @@
 # SOFTWARE.
 
 import os
+import time
 
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
@@ -38,11 +39,6 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 class BatchRandomIO(object):
 
     def __init__(self, seeds=[], paths=None, size=None, cleanup=False, ncores=1):
-        # with ProcessPoolExecutor(max_workers=ncores) as executor:
-        with ThreadPoolExecutor(max_workers=ncores) as executor:
-            _future_randio = [executor.submit(RandomIO, seed=seed, size=size)
-                              for seed in seeds]
-        self.randio_objs = (f.result() for f in as_completed(_future_randio))
         self.seeds = seeds
         self.paths = paths
         self.size = size
@@ -52,9 +48,8 @@ class BatchRandomIO(object):
         self.size = size if size else self.size
         self.paths = paths if paths else self.paths
 
-        def _genfile(o=None, path=None, size=None):
-        # def _genfile(obj_and_path=None, size=None):
-            # o, path = obj_and_path
+        def _genfile(seed=None, path=None, size=None):
+            o = RandomIO(seed=seed, size=size)
             try:
                 o.genfile(size, path)
             except IOError as e:
