@@ -28,6 +28,8 @@ from Crypto.Hash import SHA256
 from Crypto.Util import Counter
 from binascii import hexlify
 
+import hashlib
+
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
@@ -35,14 +37,14 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
 class BatchRandomIO(object):
 
-    def __init__(self, seeds=[], paths=None, size=None, ncores=1):
+    def __init__(self, seeds=[], paths=None, size=None, cleanup=False, ncores=1):
         # with ProcessPoolExecutor(max_workers=ncores) as executor:
         with ThreadPoolExecutor(max_workers=ncores) as executor:
             g = executor.map(
                 partial(RandomIO, size=size),
                 seeds
             )
-        self.randio_objs = list(g)
+        self.randio_objs = g
         self.seeds = seeds
         self.paths = paths
         self.size = size
@@ -54,10 +56,17 @@ class BatchRandomIO(object):
 
         def _genfile(obj_and_path=None, size=None):
             o, path = obj_and_path
-            o.genfile(size, path)
-            return path
-            # hash_file = o.check_file()
-            # return hash_file
+            try:
+                o.genfile(size, path)
+            except IOError as e:
+                msg = "Failed to write shard, will try once more! '{0}'"
+                # logger.error(msg.format(repr(e)))
+                time.sleep(2)
+                o.genfile(size, path)
+            # get the file hash
+            with open(path, 'rb') as f:
+                file_hash = hashlib.sha256(f.read()).hexdigest()
+            return file_hash
 
         # with ProcessPoolExecutor(max_workers=self.ncores) as executor:
         with ThreadPoolExecutor(max_workers=self.ncores) as executor:
@@ -65,7 +74,7 @@ class BatchRandomIO(object):
                 partial(_genfile, size=size),
                 zip(self.randio_objs, self.paths)
             )
-        return list(hashes)
+        return hashes
 
 
 
