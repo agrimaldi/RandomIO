@@ -33,6 +33,7 @@ LONG_DESCRIPTION = open('README.md').read()
 
 install_requirements = [
     'pycrypto >= 2.6.1',
+    'futures >= 3.0.3',
 ]
 
 test_requirements = [
