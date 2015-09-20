@@ -48,7 +48,9 @@ class BatchRandomIO(object):
         self.size = size if size else self.size
         self.paths = paths if paths else self.paths
 
-        def _genfile(seed=None, path=None, size=None):
+        # def _genfile(seed=None, path=None, size=None):
+        def _genfile(seed_and_path, size=None):
+            seed, path = seed_and_path
             o = RandomIO(seed=seed, size=size)
             try:
                 o.genfile(size, path)
@@ -62,18 +64,22 @@ class BatchRandomIO(object):
                 file_hash = hashlib.sha256(f.read()).hexdigest()
             return file_hash
 
-        _future_hashes = []
         executor = ThreadPoolExecutor(max_workers=self.ncores)
         try:
-            _future_hashes = [
-                executor.submit(_genfile, seed=seed, path=path, size=self.size)
-                for seed, path in zip(self.seeds, self.paths)
-            ]
+            # _future_hashes = [
+                # executor.submit(_genfile, seed=seed, path=path, size=self.size)
+                # for seed, path in zip(self.seeds, self.paths)
+            # ]
+            _future_hashes = executor.map(
+                partial(_genfile, size=self.size),
+                zip(self.seeds, self.paths)
+            )
         except Exception as e:
             raise e
         finally:
             executor.shutdown(wait=False)
-        hashes = (f.result() for f in as_completed(_future_hashes))
+        # hashes = (f.result() for f in as_completed(_future_hashes))
+        hashes = _future_hashes
         return hashes
 
 
