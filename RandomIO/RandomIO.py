@@ -32,13 +32,13 @@ from binascii import hexlify
 import hashlib
 
 from functools import partial
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-
+from concurrent.futures import ThreadPoolExecutor
 
 
 class BatchRandomIO(object):
 
-    def __init__(self, seeds=[], paths=None, size=None, cleanup=False, ncores=1):
+    def __init__(self, seeds=[], paths=None,
+                 size=None, cleanup=False, ncores=1):
         self.seeds = seeds
         self.paths = paths
         self.size = size
@@ -48,14 +48,13 @@ class BatchRandomIO(object):
         self.size = size if size else self.size
         self.paths = paths if paths else self.paths
 
-        # def _genfile(seed=None, path=None, size=None):
         def _genfile(seed_and_path, size=None):
             seed, path = seed_and_path
             o = RandomIO(seed=seed, size=size)
             try:
                 o.genfile(size, path)
-            except IOError as e:
-                msg = "Failed to write shard, will try once more! '{0}'"
+            except IOError:
+                # msg = "Failed to write shard, will try once more! '{0}'"
                 # logger.error(msg.format(repr(e)))
                 time.sleep(2)
                 o.genfile(size, path)
@@ -66,10 +65,6 @@ class BatchRandomIO(object):
 
         executor = ThreadPoolExecutor(max_workers=self.ncores)
         try:
-            # _future_hashes = [
-                # executor.submit(_genfile, seed=seed, path=path, size=self.size)
-                # for seed, path in zip(self.seeds, self.paths)
-            # ]
             _future_hashes = executor.map(
                 partial(_genfile, size=self.size),
                 zip(self.seeds, self.paths)
@@ -78,10 +73,8 @@ class BatchRandomIO(object):
             raise e
         finally:
             executor.shutdown(wait=False)
-        # hashes = (f.result() for f in as_completed(_future_hashes))
         hashes = _future_hashes
         return hashes
-
 
 
 class RandomIO(object):
